@@ -36,10 +36,16 @@ namespace ViveSR.anipal.Eye
                 return;
             }
 
-            logPath = Path.Combine(
-                System.Environment.GetFolderPath(System.Environment.SpecialFolder.Desktop),
-                "eye_tracking_log_test.csv"
+            string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");  // e.g., 2025-10-22_14-30-00
+            string logDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                "AcroGenData",
+                sceneName,
+                timestamp
             );
+            Directory.CreateDirectory(logDirectory);
+            string logPath = Path.Combine(logDirectory, "eye_tracking_log_test.csv");
 
             writer = new StreamWriter(logPath);
             writer.WriteLine("Timestamp,PupilDiameterLeft,PupilDiameterRight"); // header row
