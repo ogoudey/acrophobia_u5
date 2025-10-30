@@ -10,6 +10,9 @@ namespace ViveSR.anipal.Eye
     public class EyeTrackingManager : MonoBehaviour
     {
         public static EyeTrackingManager instance;
+
+        [SerializeField]
+        private string subjectName = "Default Dave";
         private static EyeData eyeData = new EyeData();
         private static EyeData_v2 eyeDataV2 = new EyeData_v2();
 
@@ -24,6 +27,8 @@ namespace ViveSR.anipal.Eye
         {
             public MonoPInvokeCallbackAttribute() { }
         }
+
+
 
         void Start()
         {
@@ -42,6 +47,7 @@ namespace ViveSR.anipal.Eye
             string logDirectory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
                 "AcroGenData",
+                subjectName,
                 sceneName,
                 timestamp
             );
@@ -49,7 +55,7 @@ namespace ViveSR.anipal.Eye
             string logPath = Path.Combine(logDirectory, "eye_tracking_log_test.csv");
 
             writer = new StreamWriter(logPath);
-            writer.WriteLine("Timestamp,PupilDiameterLeft,PupilDiameterRight"); // header row
+            writer.WriteLine("Timestamp,PupilDiameterLeft,PupilDiameterRight,GazeLeftX,GazeLeftY,GazeLeftZ,GazeRightX,GazeRightY,GazeRightZ"); // header row
             writer.Flush();
 
             SRanipal_Eye.WrapperRegisterEyeDataCallback(Marshal.GetFunctionPointerForDelegate((SRanipal_Eye.CallbackBasic)EyeCallback));
