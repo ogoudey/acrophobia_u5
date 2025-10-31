@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEditor;
+using System;
+using System.Runtime.InteropServices;
 using System.IO;
 using System.Linq;
 using System.Diagnostics;
@@ -15,7 +17,8 @@ public class GenerationWindow : EditorWindow
     // Generate tab fields
     private string promptText = "";
     private string generationName = "";
-    private bool use_asset_project_generator_class = true;
+    private bool use_asset_project_generator_class;
+    private bool run_sync = false;
     private Dictionary<string, bool> expandedLogs = new Dictionary<string, bool>();
 
     // Generations tab
@@ -83,7 +86,8 @@ public class GenerationWindow : EditorWindow
         promptText = EditorGUILayout.TextField("Prompt:", promptText);
         generationName = EditorGUILayout.TextField("Scene name:", generationName);
         
-        use_asset_project_generator_class = EditorGUILayout.Toggle($"Use {assetProject}", true);
+        use_asset_project_generator_class = EditorGUILayout.Toggle($"Use {assetProject}", use_asset_project_generator_class);
+        run_sync = EditorGUILayout.Toggle($"Run synchronously", run_sync);
 
         EditorGUILayout.LabelField("Parameters here...");
         EditorGUILayout.Toggle("Example Toggle", true);
@@ -367,58 +371,24 @@ public class GenerationWindow : EditorWindow
     }
 
     private void Generate()
-    {
-        //string script_name = "generate.sh";
-        string script_name = "generate.ps1";
-
-        string scriptPath = Path.GetFullPath(Path.Combine(backendPath, "generate.ps1"));
-        UnityEngine.Debug.Log(scriptPath);
-
-        if (!File.Exists(scriptPath))
+    {   
+        ProcessStartInfo psi;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            UnityEngine.Debug.LogError($"Script not found: {scriptPath}");
-            return;
-        }
+            string script_name = "generate.ps1";
 
-        //string bashArgs = $"\"{scriptPath}\" \"{assetProject}\" \"{promptText}\" \"{generationName}\" \"{use_asset_project_generator_class.ToString()}\"";
-        string psArgs = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" " +
-                $"\"{assetProject}\" \"{promptText}\" \"{generationName}\" \"{use_asset_project_generator_class}\"";
+            string scriptPath = Path.GetFullPath(Path.Combine(backendPath, "generate.ps1"));
+            UnityEngine.Debug.Log(scriptPath);
 
-        ProcessStartInfo psi = new ProcessStartInfo()
-        /*
-        {
-            FileName = "/bin/bash",
-            Arguments = bashArgs,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };*/
-        {
-            FileName = "powershell.exe",
-            Arguments = psArgs,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true
-        };
+            if (!File.Exists(scriptPath))
+            {
+                UnityEngine.Debug.LogError($"Script not found: {scriptPath}");
+                return;
+            }
+            string psArgs = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" " +
+                    $"\"{assetProject}\" \"{promptText}\" \"{generationName}\" \"{use_asset_project_generator_class}\"";
 
-
-        Process process = new Process { StartInfo = psi };
-        process.Start();
-
-        UnityEngine.Debug.Log($"🚀 Generation {generationName} started!");
-        
-        /*
-        {
-            FileName = "/bin/bash",
-            Arguments = bashArgs,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };*/
-        /*
-        using (Process process = new Process())
-        {
-            process.StartInfo =  new ProcessStartInfo()
-        
+            ProcessStartInfo psi = new ProcessStartInfo()
             {
                 FileName = "powershell.exe",
                 Arguments = psArgs,
@@ -426,17 +396,52 @@ public class GenerationWindow : EditorWindow
                 CreateNoWindow = true,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
-            };;
+            };
+        }
+        else // Linux, MacOS
+        {
+            string scriptPath = Path.GetFullPath(Path.Combine(backendPath, "generate.sh"));
+            UnityEngine.Debug.Log(scriptPath);
+            if (!File.Exists(scriptPath))
+            {
+                UnityEngine.Debug.LogError($"Script not found: {scriptPath}");
+                return;
+            }
+
+            // Construct the bash command arguments
+            string bashArgs = $"\"{scriptPath}\" \"{assetProject}\" \"{promptText}\" \"{generationName}\" \"{use_asset_project_generator_class.ToString()}\"";
+
+            psi = new ProcessStartInfo()
+            {
+                FileName = "/bin/bash",
+                Arguments = bashArgs,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            };
+        }
+        
+
+        if (run_sync == true){
+            using (Process process = new Process())
+            {
+                process.StartInfo = psi;
+                process.Start();
+
+                string output = process.StandardOutput.ReadToEnd();
+                string errors = process.StandardError.ReadToEnd();
+                process.WaitForExit();
+
+                UnityEngine.Debug.Log($"✅ Bash output:\n{output}");
+                if (!string.IsNullOrEmpty(errors))
+                    UnityEngine.Debug.LogWarning($"⚠️ Bash errors:\n{errors}");
+            }
+        }
+        else {
+            Process process = new Process { StartInfo = psi };
             process.Start();
 
-            string output = process.StandardOutput.ReadToEnd();
-            string errors = process.StandardError.ReadToEnd();
-            process.WaitForExit();
-
-            UnityEngine.Debug.Log($"✅ Bash output:\n{output}");
-            if (!string.IsNullOrEmpty(errors))
-                UnityEngine.Debug.LogWarning($"⚠️ Bash errors:\n{errors}");
-        }*/
+            UnityEngine.Debug.Log($"🚀 Generation {generationName} started!");
+        }
     }
 
     private static string ReadLastLine(string path)
@@ -538,5 +543,6 @@ public class GenerationWindow : EditorWindow
 
         UnityEngine.Debug.Log($"📦 Archived {movedCount} log(s) to {archiveDir}");
     }
+
 
 }
