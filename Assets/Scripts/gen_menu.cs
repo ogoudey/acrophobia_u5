@@ -5,9 +5,9 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Linq;
 using System.Diagnostics;
-using UnityEditor.SceneManagement;
 using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using System.Threading.Channels;
 
 public class GenerationWindow : EditorWindow
 {
@@ -28,7 +28,7 @@ public class GenerationWindow : EditorWindow
     private string generationName = "";
     private string targetSubject = "";
     private int targetSubjectIndex = 0;
-    List<string> targetSubjects;
+    public List<string> targetSubjects;
     private string newSubject = "";
     private bool use_asset_project_generator_class = true;
     private bool runSync = false;
@@ -631,10 +631,9 @@ public class GenerationWindow : EditorWindow
 
         selectedGenerationIndex = 0;
     }
-
-    [MenuItem("Gen Menu/Calibrate...")]
     private static void RunPupilCalibration()
     {
+        /*
         string scenePath = "Assets/Scenes/Calibration.unity";
 
         var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
@@ -651,6 +650,7 @@ public class GenerationWindow : EditorWindow
             EditorSceneManager.OpenScene(scenePath);
             UnityEngine.Debug.Log("Opened calibration scene: " + scenePath);
         }
+        */ // Scene is alraedy loaded.
 
         // This line you change for another Eyetracking package.
         ViveSR.anipal.Eye.EyeTrackingManager eyeManager = FindObjectOfType<ViveSR.anipal.Eye.EyeTrackingManager>();
@@ -853,106 +853,94 @@ public class GenerationWindow : EditorWindow
 
         UnityEngine.Debug.Log($"📦 Archived {movedCount} log(s) to {archiveDir}");
     }
-
-
 }
 
-public class SubjectSelectionPopup : EditorWindow
+ // Ctrl/Cmd + Shift + G
+public class RunExperimentWindow : EditorWindow
 {
-    private string[] subjects;
     private int selectedIndex = 0;
-    private System.Action<string> onConfirm;
-    private string newSubjectName = "";
-    private bool addingNew = false;
 
-    public static void Show(string title, string[] subjects, System.Action<string> onConfirm)
+    [MenuItem("Gen Menu/Begin Experiment")]
+    public static void Show()
     {
-        var window = CreateInstance<SubjectSelectionPopup>();
-        window.titleContent = new GUIContent(title);
-        window.subjects = subjects;
-        window.onConfirm = onConfirm;
+        RunExperimentWindow window = CreateInstance<RunExperimentWindow>();
+        window.titleContent = new GUIContent("Experiment");
         window.minSize = new Vector2(350, 180);
         window.ShowUtility();
     }
 
     private void OnGUI()
     {
-        GUILayout.Label("Select or Add Subject", EditorStyles.boldLabel);
-        GUILayout.Space(5);
+        GUILayout.Label("Experiment", EditorStyles.boldLabel);
 
-        if (!addingNew)
+        var subjects = GenerationWindow.targetSubjects;
+
+        if (subjects == null || subjects.Count == 0)
         {
-            if (subjects != null && subjects.Length > 0)
-                selectedIndex = EditorGUILayout.Popup("Subject", selectedIndex, subjects);
-            else
-                EditorGUILayout.LabelField("No existing subjects found.");
-
-            GUILayout.Space(8);
-            if (GUILayout.Button("Add New Subject", GUILayout.Width(80)))
-            {
-                addingNew = true;
-                newSubjectName = "";
-            }
+            EditorGUILayout.HelpBox($"No subjects available, contact your supervisor.", MessageType.Warning);
+            return;
         }
-        else
+        EditorGUILayout.LabelField("Make sure the headset is already on, and all VR software is up and running.");
+        bool readyToggle = false;
+        readyToggle = EditorGUILayout.Toggle($"Looks good!", readyToggle);
+        EditorGUILayout.LabelField("Then introduce yourself and the experiment to the subject. Identify them from the list below.");
+        selectedIndex = EditorGUILayout.Popup("Select Subject", selectedIndex, susbjects.ToArray());
+        if (selectedIndex > 0)
         {
-            GUILayout.Label("Enter new subject name:", EditorStyles.label);
-            newSubjectName = EditorGUILayout.TextField("New Subject", newSubjectName);
-
+            EditorGUILayout.LabelField("At this point you may run the experiment.");
             GUILayout.Space(8);
-            GUILayout.BeginHorizontal();
-            if (GUILayout.Button("✅ Confirm New Subject"))
+            if (GUILayout.Button("Run Experiment"))
             {
-                if (!string.IsNullOrEmpty(newSubjectName))
-                {
-                    onConfirm?.Invoke(newSubjectName);
-                    Close();
-                }
-                else
-                {
-                    EditorUtility.DisplayDialog("Error", "Subject name cannot be empty.", "OK");
-                }
-            }
-
-            if (GUILayout.Button("⬅️"))
-            {
-                addingNew = false;
-            }
-            GUILayout.EndHorizontal();
-        }
-
-        GUILayout.FlexibleSpace();
-        GUILayout.Space(10);
-
-        // Confirm/Cancel buttons
-        if (!addingNew)
-        {
-            GUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("OK", GUILayout.Width(80)))
-            {
-                string selectedSubject = subjects != null && subjects.Length > 0
-                    ? subjects[selectedIndex]
-                    : null;
-
-                if (!string.IsNullOrEmpty(selectedSubject))
-                {
-                    onConfirm?.Invoke(selectedSubject);
-                    Close();
-                }
-                else
-                {
-                    EditorUtility.DisplayDialog("Error", "Please select or add a subject.", "OK");
-                }
-            }
-
-            if (GUILayout.Button("Cancel", GUILayout.Width(80)))
-            {
+                string selectedSubject = subjects[selectedIndex];
+                UnityEngine.Debug.Log($"Starting experiment on {selectedSubject}.");
                 Close();
+
+
+                RunExperiment(selectedSubject);
+                
             }
-            GUILayout.FlexibleSpace();
-            GUILayout.EndHorizontal();
         }
+    }
+
+    private void RunExperiment(string subject)
+    {
+        UnityEngine.Debug.Log($"Opening practice scene.");
+        string scenePath = "Assets/Scenes/Practice.unity";
+        var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
+        if (sceneAsset == null)
+        {
+            EditorUtility.DisplayDialog("Scene Not Found",
+                $"Could not find the practice scene at:\n{scenePath}\n\nContact supervisor.",
+                "Will do!");
+            return;
+        }
+        EditorSceneManager.OpenScene(scenePath);
+        UnityEngine.Debug.Log("Opened practice scene: " + scenePath);
+        EditorApplication.isPlaying = true;
+
+        yield return new WaitForSecondsRealtime(27);
+        UnityEngine.Debug.Log("Leaving practice scene in 3 seconds.");
+        yield return new WaitForSecondsRealtime(2);
+        UnityEngine.Debug.Log("Opening calibration scene");
+        yield return new WaitForSecondsRealtime(1);
+        EditorApplication.isPlaying = false;
+
+        string scenePath = "Assets/Scenes/Calibration.unity";
+        var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
+        if (sceneAsset == null)
+        {
+            EditorUtility.DisplayDialog("Scene Not Found",
+                $"Could not find the calibration scene at:\n{scenePath}\n\nContact supervisor.",
+                "Will do!");
+            return;
+        }
+        EditorSceneManager.OpenScene(scenePath);
+        UnityEngine.Debug.Log("Opened calibration scene: " + scenePath);
+        EditorApplication.isPlaying = true;
+        GenerationWindow.RunPupilCalibration();
+        EditorApplication.isPlaying = false;
+
+        // Next, load each scene in the subject's sequence.
     }
 }
 
