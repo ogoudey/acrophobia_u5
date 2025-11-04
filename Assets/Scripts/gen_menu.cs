@@ -70,8 +70,6 @@ public class GenerationWindow : EditorWindow
 
     }
 
-
-
     private void OnGUI()
     {
         EditorGUILayout.BeginHorizontal();
@@ -151,7 +149,6 @@ public class GenerationWindow : EditorWindow
                 string path = Path.Combine(Application.dataPath, "Generations");
                 if (!Directory.Exists(path))
                     Directory.CreateDirectory(path);
-
 
                 RefreshGenerationsList();
             }
@@ -499,7 +496,7 @@ public class GenerationWindow : EditorWindow
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Selected Asset Project Path:");
         EditorGUILayout.TextField(GetSelectedFolderPath());
-        // END
+
         if (GUILayout.Button("Open Asset Project"))
         {
             EditorUtility.DisplayDialog("Error", "Are you sure you want to open a new Unity project?", "Continue");
@@ -636,11 +633,10 @@ public class GenerationWindow : EditorWindow
     }
 
     [MenuItem("Gen Menu/Calibrate...")]
-    private static void OpenCalibrationScene()
+    private static void RunPupilCalibration()
     {
-        string scenePath = "Assets/Scenes/calibrate.unity";
+        string scenePath = "Assets/Scenes/Calibration.unity";
 
-        // Check if the scene exists
         var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
         if (sceneAsset == null)
         {
@@ -650,11 +646,19 @@ public class GenerationWindow : EditorWindow
             return;
         }
 
-        // Prompt to save current changes
         if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
         {
             EditorSceneManager.OpenScene(scenePath);
             UnityEngine.Debug.Log("Opened calibration scene: " + scenePath);
+        }
+
+        // This line you change for another Eyetracking package.
+        ViveSR.anipal.Eye.EyeTrackingManager eyeManager = FindObjectOfType<ViveSR.anipal.Eye.EyeTrackingManager>();
+        if (eyeManager == null)
+            UnityEngine.Debug.Log("Can't fine EyeManager...");
+        else
+        {
+            eyeManager.PupilCalibration();
         }
     }
 
