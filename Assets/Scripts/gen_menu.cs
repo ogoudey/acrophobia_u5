@@ -6,8 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using UnityEngine.SceneManagement;
+using UnityEditor.SceneManagement;
 using System.Collections.Generic;
-using System.Threading.Channels;
 
 public class GenerationWindow : EditorWindow
 {
@@ -526,7 +526,7 @@ public class GenerationWindow : EditorWindow
         LoadGenerations();
     }
 
-    private void LoadGenerations(string fileName = "Generations.json")
+    public void LoadGenerations(string fileName = "Generations.json")
     {
         string path = Path.Combine(Application.dataPath, fileName);
         if (!File.Exists(path))
@@ -569,15 +569,6 @@ public class GenerationWindow : EditorWindow
         return subjects;
     }
 
-    private void PromptForSubjectAndOpenScene(string relativePath)
-    {
-        SubjectSelectionPopup.Show("Select Subject", subjects, (selectedSubject) =>
-        {
-            UnityEngine.Debug.Log($"Selected subject: {selectedSubject}");
-            EditorSceneManager.OpenScene(relativePath, OpenSceneMode.Single);
-            this.Close();
-        });
-    }
 
     private string GetSelectedFolderPath()
     {
@@ -631,36 +622,7 @@ public class GenerationWindow : EditorWindow
 
         selectedGenerationIndex = 0;
     }
-    private static void RunPupilCalibration()
-    {
-        /*
-        string scenePath = "Assets/Scenes/Calibration.unity";
-
-        var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
-        if (sceneAsset == null)
-        {
-            EditorUtility.DisplayDialog("Scene Not Found",
-                $"Could not find the calibration scene at:\n{scenePath}\n\nMake sure it exists in your project.",
-                "OK");
-            return;
-        }
-
-        if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
-        {
-            EditorSceneManager.OpenScene(scenePath);
-            UnityEngine.Debug.Log("Opened calibration scene: " + scenePath);
-        }
-        */ // Scene is alraedy loaded.
-
-        // This line you change for another Eyetracking package.
-        ViveSR.anipal.Eye.EyeTrackingManager eyeManager = FindObjectOfType<ViveSR.anipal.Eye.EyeTrackingManager>();
-        if (eyeManager == null)
-            UnityEngine.Debug.Log("Can't fine EyeManager...");
-        else
-        {
-            eyeManager.PupilCalibration();
-        }
-    }
+    
 
     private void Generate()
     {
@@ -857,52 +819,80 @@ public class GenerationWindow : EditorWindow
 
  // Ctrl/Cmd + Shift + G
 public class RunExperimentWindow : EditorWindow
-{
-    private int selectedIndex = 0;
-
-    [MenuItem("Gen Menu/Begin Experiment")]
+{ 
+    [MenuItem("Gen Menu/Experiment/Customized Scenes")]
     public static void Show()
     {
         RunExperimentWindow window = CreateInstance<RunExperimentWindow>();
-        window.titleContent = new GUIContent("Experiment");
+        window.titleContent = new GUIContent("Run Experiment");
         window.minSize = new Vector2(350, 180);
         window.ShowUtility();
+
     }
 
     private void OnGUI()
     {
-        GUILayout.Label("Experiment", EditorStyles.boldLabel);
-
-        var subjects = GenerationWindow.targetSubjects;
-
-        if (subjects == null || subjects.Count == 0)
+        Dictionary<string, Dictionary<string, string>> generations = GenerationsLoader.LoadGenerations();
+        List<string> targetSubjects = GetAllSubjects(generations);
+        GUILayout.Label("Main Experiment", EditorStyles.boldLabel);
+        if (targetSubjects == null || targetSubjects.Count == 0)
         {
             EditorGUILayout.HelpBox($"No subjects available, contact your supervisor.", MessageType.Warning);
             return;
         }
-        EditorGUILayout.LabelField("Make sure the headset is already on, and all VR software is up and running.");
-        bool readyToggle = false;
-        readyToggle = EditorGUILayout.Toggle($"Looks good!", readyToggle);
-        EditorGUILayout.LabelField("Then introduce yourself and the experiment to the subject. Identify them from the list below.");
-        selectedIndex = EditorGUILayout.Popup("Select Subject", selectedIndex, susbjects.ToArray());
+        int selectedIndex = 0;
+        selectedIndex = EditorGUILayout.Popup("Select Subject", selectedIndex, targetSubjects.ToArray());
         if (selectedIndex > 0)
         {
             EditorGUILayout.LabelField("At this point you may run the experiment.");
             GUILayout.Space(8);
             if (GUILayout.Button("Run Experiment"))
             {
-                string selectedSubject = subjects[selectedIndex];
+                string selectedSubject = targetSubjects[selectedIndex];
                 UnityEngine.Debug.Log($"Starting experiment on {selectedSubject}.");
-                Close();
+                var matchingScenes = generations
+                    .Where(kvp => kvp.Value.ContainsKey("Subject") && kvp.Value["Subject"] == selectedSubject)
+                    .Select(kvp => kvp.Key)
+                    .ToList();
+                if (matchingScenes.Count == 0)
+                {
+                    EditorUtility.DisplayDialog("No Scenes", $"No scenes found for {selectedSubject}", "Bummer.");
+                    return;
+                }
+                int selectedSceneIndex = 0;
+                selectedSceneIndex = EditorGUILayout.Popup("Scenes:", selectedSceneIndex, matchingScenes.ToArray());
+                string selectedScene = matchingScenes[selectedSceneIndex];
+                string generationsRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "Generations"));
+                string scenePath = Path.ChangeExtension(Path.Combine(generationsRoot, selectedScene), ".unity");
+                if (scenePath == "None")
+                {
+                    EditorUtility.DisplayDialog("Error", "Please select a scene to open.", "OK");
+                }
+                string relativePath = "Assets" + scenePath.Substring(Application.dataPath.Length);
+                UnityEngine.Debug.Log(relativePath);
+                // Check if the scene exists
+                SceneAsset sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(relativePath);
 
-
-                RunExperiment(selectedSubject);
-                
+                if (sceneAsset == null)
+                {
+                    UnityEngine.Debug.LogError($"❌ Failed to load scene at {relativePath}");
+                }
+                else
+                {
+                    UnityEngine.Debug.Log($"✅ Loaded scene asset: {sceneAsset.name}");
+                }
+                // optional: confirm scene save
+                if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+                {
+                    EditorSceneManager.OpenScene(relativePath, OpenSceneMode.Single);
+                    this.Close();
+                }
             }
         }
     }
 
-    private void RunExperiment(string subject)
+    [MenuItem("Gen Menu/Experiment/Open Practice Scene")]
+    public static void PracticeScene()
     {
         UnityEngine.Debug.Log($"Opening practice scene.");
         string scenePath = "Assets/Scenes/Practice.unity";
@@ -912,35 +902,86 @@ public class RunExperimentWindow : EditorWindow
             EditorUtility.DisplayDialog("Scene Not Found",
                 $"Could not find the practice scene at:\n{scenePath}\n\nContact supervisor.",
                 "Will do!");
-            return;
         }
         EditorSceneManager.OpenScene(scenePath);
         UnityEngine.Debug.Log("Opened practice scene: " + scenePath);
-        EditorApplication.isPlaying = true;
+    }
 
-        yield return new WaitForSecondsRealtime(27);
-        UnityEngine.Debug.Log("Leaving practice scene in 3 seconds.");
-        yield return new WaitForSecondsRealtime(2);
-        UnityEngine.Debug.Log("Opening calibration scene");
-        yield return new WaitForSecondsRealtime(1);
-        EditorApplication.isPlaying = false;
+    [MenuItem("Gen Menu/Experiment/Calibration/Load Scene")]
+    public static void OpenPupilCalibration()
+    {
 
         string scenePath = "Assets/Scenes/Calibration.unity";
+
         var sceneAsset = AssetDatabase.LoadAssetAtPath<SceneAsset>(scenePath);
         if (sceneAsset == null)
         {
             EditorUtility.DisplayDialog("Scene Not Found",
-                $"Could not find the calibration scene at:\n{scenePath}\n\nContact supervisor.",
-                "Will do!");
+                $"Could not find the calibration scene at:\n{scenePath}\n\nMake sure it exists in your project.",
+                "OK");
             return;
         }
-        EditorSceneManager.OpenScene(scenePath);
-        UnityEngine.Debug.Log("Opened calibration scene: " + scenePath);
-        EditorApplication.isPlaying = true;
-        GenerationWindow.RunPupilCalibration();
-        EditorApplication.isPlaying = false;
 
-        // Next, load each scene in the subject's sequence.
+        if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
+        {
+            EditorSceneManager.OpenScene(scenePath);
+            UnityEngine.Debug.Log("Opened calibration scene: " + scenePath);
+        }
+    }
+
+    [MenuItem("Gen Menu/Experiment/Calibration/Run Calibration")]
+    public static void RunPupilCalibration()
+    {
+        // This line you change for another Eyetracking package.
+        ViveSR.anipal.Eye.EyeTrackingManager eyeManager = FindObjectOfType<ViveSR.anipal.Eye.EyeTrackingManager>();
+        if (eyeManager == null)
+            UnityEngine.Debug.Log("Can't fine EyeManager...");
+        else
+        {
+            eyeManager.PupilCalibration();
+        }
+    }
+
+    // Another function copied from GenWindow
+    private List<string> GetAllSubjects(Dictionary<string, Dictionary<string, string>> generations)
+    {
+        List<string> subjects = new List<string>();
+
+        foreach (var kvp in generations)
+        {
+            var data = kvp.Value;
+            if (data.ContainsKey("Subject"))
+            {
+                subjects.Add(data["Subject"]);
+            }
+        }
+
+        return subjects;
+    }
+}
+
+public static class GenerationsLoader
+{
+    public static Dictionary<string, Dictionary<string, string>> LoadGenerations(string fileName = "Generations.json")
+    {
+        string path = Path.Combine(Application.dataPath, fileName);
+
+        string json = File.ReadAllText(path);
+        GenerationsWrapper wrapper = JsonUtility.FromJson<GenerationsWrapper>(json);
+
+        Dictionary<string, Dictionary<string, string>> generations = new Dictionary<string, Dictionary<string, string>>();
+        foreach (var entry in wrapper.generations)
+        {
+            Dictionary<string, string> dict = new Dictionary<string, string>();
+            dict["Subject"] = entry.Subject;
+            dict["Prompt"] = entry.Prompt;
+            dict["Asset Project"] = entry.AssetProject;
+            dict["Approved"] = entry.Approved;
+            generations[entry.genName] = dict;
+        }
+        // Fill out subjects list:
+        UnityEngine.Debug.Log($"✅ Generations loaded from {path}");
+        return generations;
     }
 }
 
