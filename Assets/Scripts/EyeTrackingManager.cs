@@ -7,15 +7,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.UI;
 using System.Diagnostics;
+using PCPSLib;
 
 namespace ViveSR.anipal.Eye
 {
     public class EyeTrackingManager : MonoBehaviour
     {
         public static EyeTrackingManager instance;
-
-        [SerializeField]
-        private string subjectName = "Default Dave";
+        private string subjectName;
         private static EyeData eyeData = new EyeData();
 
         public static float pupilDiameterLeft;
@@ -52,7 +51,7 @@ namespace ViveSR.anipal.Eye
         private static bool fearEnabled = false;
         private static bool fearConfigured = false;
 
-
+        private static PCPS pcps;
 
         internal class MonoPInvokeCallbackAttribute : System.Attribute
         {
@@ -65,12 +64,34 @@ namespace ViveSR.anipal.Eye
             {
                 instance = this;
             }
-            cam = Camera.main;
+
+
             if (!SRanipal_Eye_Framework.Instance.EnableEye)
             {
                 return;
             }
+            //float waitTimeBeforeEyeDataCallbackStarted = 3.0f;
+            //yield return new WaitForSecondsRealtime(waitTimeBeforeEyeDataCallbackStarted);
+            SRanipal_Eye_Framework.Instance.EnableEyeDataCallback = true;
 
+            // Find subject name, the camera is named after the subject
+            Camera cameraComponent = UnityEngine.Object.FindObjectOfType<Camera>();
+
+            if (cameraComponent != null)
+            {
+                GameObject cameraObject = cameraComponent.gameObject;
+
+                subjectName = cameraObject.name;
+                UnityEngine.Debug.Log($"Subject is {subjectName}.");
+            }
+            else
+            {
+                UnityEngine.Debug.LogWarning("No GameObject with a Camera component was found in the scene.");
+                return;
+            }
+                        
+            pcps = new PCPS();
+            cam = Camera.main;
             string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");  // e.g., 2025-10-22_14-30-00
             string logDirectory = Path.Combine(
@@ -85,20 +106,20 @@ namespace ViveSR.anipal.Eye
 
             writer = new StreamWriter(logPath);
             writer.WriteLine("Timestamp,PupilDiameterLeft,PupilDiameterRight,GazeLeftX,GazeLeftY,GazeLeftZ,GazeRightX,GazeRightY,GazeRightZ,CalculatedFear"); // header row
-            // Add CalculatedFear header
+            
+
             writer.Flush();
 
             if (luminanceEnabled)
             {
                 CreateLuminanceCamera();
             }
-            // Would check the "workload server" here...
+
             fearChecked = true;
 
             fearMs = (int)Mathf.Round(fearPeriod * 1000);
             fearPupil = new List<float>();
             fearLuminance = new List<float>();
-
 
             SRanipal_Eye.WrapperRegisterEyeDataCallback(Marshal.GetFunctionPointerForDelegate((SRanipal_Eye.CallbackBasic)EyeCallback));
             UnityEngine.Debug.Log("EyeCallback registered and logging to: " + logPath);
@@ -106,6 +127,7 @@ namespace ViveSR.anipal.Eye
 
         void OnApplicationQuit()
         {
+            SRanipal_Eye_Framework.Instance.EnableEyeDataCallback = false;
             if (writer != null)
             {
                 writer.Flush();
@@ -270,11 +292,8 @@ namespace ViveSR.anipal.Eye
 
         private static void Increment(float pupilDiameterLeft, float pupilDiameterRight)
         {
-            // Should calculate fear instead...
-
             if (fearChecked && fearEnabled)
             {
-                // send averageDiameter?
                 fearIncrements.Add(pupilDiameterLeft);
             }
 
@@ -282,7 +301,9 @@ namespace ViveSR.anipal.Eye
 
         public void UpdateIncrements()
         {
-            Increments inc = new Increments(fearIncrements);
+            //Increments inc = new Increments(fearIncrements);
+            pcps.SetThreshold(2.0f); // Why not?
+            pcps.SetIncrements(fearIncrements.ToArray());
 
             fearConfigured = true;
             UnityEngine.Debug.Log("?? Fear increments configured");
@@ -291,8 +312,9 @@ namespace ViveSR.anipal.Eye
 
         public static float CalculateFear()
         {
-            Fear fear = new Fear(fearPupil, fearLuminance);
-            return 0.019F;
+
+            float fearResult = pcps.CalculateFear(fearPupil.ToArray(), fearLuminance.ToArray());
+            return fearResult;
         }
     }
 }

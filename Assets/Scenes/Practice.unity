@@ -436,7 +436,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   player: {fileID: 1696921082}
-  speed: 1
+  speed: 0.2
   m_GrabAction:
     actionPath: /actions/default/in/Teleport
     needsReinit: 0

@@ -39,6 +39,7 @@ public class GenerationWindow : EditorWindow
     // Generations tab
     private Dictionary<string, Dictionary<string, string>> generations = new Dictionary<string, Dictionary<string, string>>();
 
+
     private string[] generationOptions;
     private int selectedGenerationIndex = 0;
     private string[] generationFiles;
@@ -47,6 +48,7 @@ public class GenerationWindow : EditorWindow
     private string reassignTarget = "";
     private string reassignGeneration = null;
     private string infoGeneration = null;
+
     public static readonly string assetProjectDir = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
     public static readonly string assetProject = new DirectoryInfo(assetProjectDir).Name;
     private string backendPath = Path.Combine(assetProjectDir, "../../../Backend");
@@ -637,9 +639,13 @@ public class GenerationWindow : EditorWindow
                 UnityEngine.Debug.LogError($"Script not found: {scriptPath}");
                 return;
             }
+
+            UnityEngine.Debug.Log($"Running powershell with args \"{assetProject}\" \"{promptText}\" \"{generationName}\" \"{use_asset_project_generator_class}\"");
+
             string psArgs = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" " +
                     $"\"{assetProject}\" \"{promptText}\" \"{generationName}\" \"{use_asset_project_generator_class}\"";
-
+            
+            
             psi = new ProcessStartInfo()
             {
                 FileName = "powershell.exe",
@@ -688,6 +694,8 @@ public class GenerationWindow : EditorWindow
         else
         {
             generations.Add(generationName, dict);
+
+            SaveGenerations();
         }
         UnityEngine.Debug.Log(generations);
 
@@ -842,25 +850,24 @@ public class RunExperimentWindow : EditorWindow
         }
         int selectedIndex = 0;
         selectedIndex = EditorGUILayout.Popup("Select Subject", selectedIndex, targetSubjects.ToArray());
-        if (selectedIndex > 0)
+
+        string selectedSubject = targetSubjects[selectedIndex];
+        UnityEngine.Debug.Log($"Starting experiment on {selectedSubject}.");
+        var matchingScenes = generations
+            .Where(kvp => kvp.Value.ContainsKey("Subject") && kvp.Value["Subject"] == selectedSubject)
+            .Select(kvp => kvp.Key)
+            .ToList();
+        if (matchingScenes.Count == 0)
         {
-            EditorGUILayout.LabelField("At this point you may run the experiment.");
-            GUILayout.Space(8);
-            if (GUILayout.Button("Run Experiment"))
+            EditorGUILayout.HelpBox($"No scenes found for {selectedSubject}", MessageType.Warning);
+            return;
+        }
+        int selectedSceneIndex = 0;
+        selectedSceneIndex = EditorGUILayout.Popup("Scenes:", selectedSceneIndex, matchingScenes.ToArray());
+        if (selectedSceneIndex > -1)
+        {
+            if (GUILayout.Button("Open Scene", GUILayout.Width(120)))
             {
-                string selectedSubject = targetSubjects[selectedIndex];
-                UnityEngine.Debug.Log($"Starting experiment on {selectedSubject}.");
-                var matchingScenes = generations
-                    .Where(kvp => kvp.Value.ContainsKey("Subject") && kvp.Value["Subject"] == selectedSubject)
-                    .Select(kvp => kvp.Key)
-                    .ToList();
-                if (matchingScenes.Count == 0)
-                {
-                    EditorUtility.DisplayDialog("No Scenes", $"No scenes found for {selectedSubject}", "Bummer.");
-                    return;
-                }
-                int selectedSceneIndex = 0;
-                selectedSceneIndex = EditorGUILayout.Popup("Scenes:", selectedSceneIndex, matchingScenes.ToArray());
                 string selectedScene = matchingScenes[selectedSceneIndex];
                 string generationsRoot = Path.GetFullPath(Path.Combine(Application.dataPath, "Generations"));
                 string scenePath = Path.ChangeExtension(Path.Combine(generationsRoot, selectedScene), ".unity");
@@ -885,6 +892,21 @@ public class RunExperimentWindow : EditorWindow
                 if (EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 {
                     EditorSceneManager.OpenScene(relativePath, OpenSceneMode.Single);
+
+                    Camera cameraComponent = UnityEngine.Object.FindObjectOfType<Camera>();
+
+                    if (cameraComponent != null)
+                    {
+                        GameObject cameraObject = cameraComponent.gameObject;
+
+                        cameraObject.name = selectedSubject;
+                        UnityEngine.Debug.Log($"Renamed GameObject with Camera component to '{selectedSubject}'.");
+                    }
+                    else
+                    {
+                        UnityEngine.Debug.LogWarning("No GameObject with a Camera component was found in the scene.");
+                    }
+    
                     this.Close();
                 }
             }
