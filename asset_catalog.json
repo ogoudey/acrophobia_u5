@@ -1,0 +1,239 @@
+{
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Trees/Spruce 1.prefab":
+    {
+        "Name":"Spruce 1",
+        "Info": {
+            "Local origin": "at the very bottom of the object and the midpoint along the X and Z. If you place me at a point, that is correctly the base of my trunk. Make sure my Y position = the height of the ground at my X, Z.",
+            "Recommendation": "You should probably scatter me across the ground to promote a natural looking forest."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Detailed Water.prefab":
+    {
+        "Name": "Water",
+        "Info": {
+            "Local origin": "Top-right corner. If I am placed at 0,0, ill cover the -Z -X quadrant. So if I'm placed at x=50, z=50 I will cover the +X +Z quadrant (likely where the ground is).",
+            "Dimensions": "50m x 50m - a perfect square plane",
+            "Recommendation": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water depth. Also keep in mind the area of the intended body of water."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Water/Flat Water.prefab":
+    {
+        "Name": "Water",
+        "Info": {
+            "Local origin": "Top-right corner. If I am placed at 0,0, ill cover the -Z -X quadrant. So if I'm placed at x=50, z=50 I will cover the +X +Z quadrant (likely where the ground is).",
+            "Dimensions": "50m x 50m - a perfect square plane",
+            "Recommendation": "Have me overlap the whole ground. Make sure my Y coordinate provides the right water level if the prompt refers to a body of water."
+        }
+    },
+    "Assets/Blue Polygon/Rope Bridge 3D/Prefab/rope_bridge.prefab":
+    {
+        "Name": "Rope Bridge",
+        "Info": {
+            "Local origin": "Origin at my +X side, and in the middle of my Z dimension (about 1.25m on both sides). My origin is 1m from the sag in the middle of the bridge, but flush with the base of my posts.",
+            "Dimensions": "I am 16m long (in the -X direction) and about 2.5m wide.",
+            "Description": "I have 2 posts on either end, each 2m tall. There is a 1m sag in the crossing, since I am a rope bridge. You might need to rethink the ground terrain once if I'm placed in the scene, so that I hang over the water. When you place me, refer to how my two posts contact the ground at the right places: 16m apart on the ground. There are small spaces in between the wooden planks making my surface."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 1.prefab":
+    {
+        "Name": "Mossy Rock Cliff Big",
+        "Info": {
+            "Local origin": "object center horizontally. my base is flat along the Y (up/down) plane.",
+            "Description": "I am 3m wide and 6m tall from my flat base. So put me under the ground a little."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Rock Cliffs/Rock Cliff 4.prefab":
+    {
+        "Name": "Mossy Rock Cliff Huge",
+        "Info": {
+            "Local origin": "object center horizontally. my base is flat along the Y (up/down) plane.",
+            "Description": "This is a huge object. I am 5m tall, wide and 6m tall, 8 m wide (4 in +/- Z), and 14 meters long (7 in the +/- X direction). My base is flat."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Branch/Branch.prefab":
+    {
+        "Name": "Branch",
+        "Info": {
+            "Local origin": "center/pivot point at center of object",
+            "Description": "Just a straight stick that's about 2m long in the Z direction and 1 m wide in the X direction. Negligibly tall - i rest on the Y plane."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Bush/Bush.prefab":
+    {
+        "Name": "Bush",
+        "Info": {
+            "Local origin": "center/pivot point at center of object but at the lowest point of the object in on the Y axis.",
+            "Description": "A 1m radius bush. (relatively big) I lie on top of the Y plane so perhaps move me down a little bit."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Flower/Flower.prefab":
+    {
+        "Name": "Flower",
+        "Info": {
+            "Local origin": "at the base of the flower on its Y axis, otherwise centered.",
+            "Description": "1m high flower, neglibibly wide."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Grass/Grass.prefab":
+    {
+        "Name": "Grass",
+        "Info": {
+            "Local origin": "at the center of the object - the geometric middle.",
+            "Description": "2m square patch of grass. Flat at its base."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Log/Log.prefab":
+    {
+        "Name": "Log",
+        "Info": {
+            "Local origin": "in the middle of the log.",
+            "Description": "2m wide along the x axis. Negligibly wide, and rests on the Y plane."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Foliage/Mushroom/Mushrooms Patch.prefab":
+    {
+        "Name": "Mushroom",
+        "Info": {
+            "Local origin": "at the mushroom's base in its center",
+            "Description": "A small object. <.5m in the X and Z directions. About .3m tall."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 1.prefab":
+    {
+        "Name": "Rock1",
+        "Info": {
+            "Local origin": "at the object 3D center midpoint",
+            "Description": "About 1m cubed."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 2.prefab":
+    {
+        "Name": "Rock2",
+        "Info": {
+            "Local origin": "at the object 3D center midpoint",
+            "Description": "4m along the X axis and 2m along the Z axis. About .5m above and below the Yplane."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 3.prefab":
+    {
+        "Name": "Rock3",
+        "Info": {
+            "Local origin": "at the object 3D center midpoint",
+            "Description": "4m along the X axis and 3m along the Z axis. About 1m above the Y plane."
+        }
+    },
+    "Assets/Proxy Games/Stylized Nature Kit Lite/Prefabs/Rocks/Standard Rocks/Standard Rock 4.prefab":
+    {
+        "Name": "Rock4",
+        "Info": {
+            "Local origin": "at the object's XZ center, but the lowest point on the Y axis. the base is flat on the Y plane.",
+            "Description": "2m over the X and Z axes. About 3m tall."
+        }
+    },
+    "Assets/POLYGON city pack/Prefabs/Buildings/Building_A_prefab.prefab":
+    {
+        "Name": "GrayBuilding36m",
+        "Info": {
+            "Local origin": "at building's -X side, and 4m -Z",
+            "Dimensions": "31m x 12m x 36m high",
+            "Important points": "There is a set of balconies at at x=0, z=-6, and z=7, 9, 12, 15, 18, 21. And there is a roof at 21m in the z."
+        }
+    },
+    "Assets/POLYGON city pack/Prefabs/Buildings/Building_C1_prefab.prefab":
+    {
+        "Name": "BrownBuilding28m",
+        "Info": {
+            "Local origin": "at building's -X side and -8m -Z, or, the building's side is 8m +Z from the local origin",
+            "Important points":"At 28m there is a roof."
+        }
+    },
+    "Assets/POLYGON city pack/Prefabs/Buildings/Building_H_prefab.prefab":
+    {
+        "Name": "GreenBuilding18m",
+        "Info": {
+            "Local origin": "at buildings -X side, -2.5m from the -Z side.",
+            "Dimensions": "12m x 21.5m x 18m",
+            "Important points": "roof at 18m from base."
+        }
+    },
+    "Assets/POLYGON city pack/Prefabs/Buildings/Building_A1_prefab.prefab":
+    {
+        "Name": "ShortGrayBuilding",
+        "Info": {
+            "Local origin": "at 3m from the -Z side, on the -X side",
+            "Dimensions": "10m x 10m"
+        }
+    },
+    "Assets/CastlePack/Prefabs/WoodenBridge.prefab":
+    {
+        "Name": "WoodenBridgeNoHandrails",
+        "Info": {
+            "Local origin": "at the base of the legs of the bridge. The origin is at the middle of the crossing (z dimension) and in the middle of the width (x dimension) of the bridge",
+            "Description": "Crossing goes across the Z axis. A firm wooden bridge with a slight arc, and 4 sets of 2 legs.",
+            "Dimensions": "2m wide (in the +/- x dimension), 5m long - across the bridge, and 2 m tall. The start of the crossing (on both sides) is about 1m high, while the center of the arc is 1.5 meters high."
+        }
+    },
+    "Assets/CastlePack/Prefabs/WoodenBridgeHanddrails.prefab":
+    {
+        "Name": "WoodenBridgeHandrails",
+        "Info": {
+            "Local origin": "at the base of the legs of the bridge. The origin is at the middle of the crossing (z dimension) and in the middle of the width (x dimension) of the bridge",
+            "Description": "Crossing goes across the Z axis. A firm wooden bridge with a slight arc, and 4 sets of 2 legs. There is also a handrail that goes up one meter from the surface of the bridge.",
+            "Dimensions": "2m wide (in the +/- x dimension), 5m long - across the bridge, and 2 m tall. The start of the crossing (on both sides) is about 1m high, while the center of the arc is 1.5 meters high."
+        }
+    },
+    "Assets/CastlePack/Prefabs/StoneBridgeFlat.prefab":
+    {
+        "Name": "FlatStoneBridge",
+        "Info": {
+            "Local origin": "At the objects centerpoint Z and X, and at the base of the object (y=0).",
+            "Description": " a firm flat stone bridge.",
+            "Dimensions": "1.5m high (Y), 10m across (Z), and 5m across (X). The part one can walk on is about .7 from the base and the walkway is only 4 m wide."
+        }
+    },
+    "Assets/MaximeBrunoni/BridgesPack/Prefabs/BridgePontoon.prefab":
+    {
+        "Name": "WoodenPontoonBridge",
+        "Info": {
+            "Local origin": "At the base of the crossing, but 5m from the base of the legs. Center of the Z dimension, and on the -X side.",
+            "Description": "Crossing goes across the X axis. 3 sets of two long legs go downward. Some cracks through the bridge show significant ware, and the planks are uneven.",
+            "Dimensions": "The platform crossing is relatively flat. It goes 8m over the x axis and is 3 m wide."
+        }
+
+    },
+    "Assets/MaximeBrunoni/BridgesPack/Prefabs/BridgeHanging.prefab":
+    {
+        "Name": "HangingBridge",
+        "Info": {
+            "Local origin": "midpoint X, midpoint Z, midpoint Y",
+            "Description": "A rope bridge with 2 supporting posts on either side and 2 stakes on either side. The posts hold the bridge and the stakes provide tension to the rope handrails.",
+            "Dimensions": "13m from stakes to stakes - 6.5 on the +Z, 6.5 on the -Z, and 7m from posts to posts - 3.5m +/- Z. 4m wide - +2/-2 to from post to post on each side, and from stake to stake. About 1 meter high rope railings."
+        }
+    },
+    "Assets/MaximeBrunoni/BridgesPack/Prefabs/Well.prefab":
+    {
+        "Name": "Well",
+        "Info": {
+            "Local origin": "base of the well, center of the horizontal circle.",
+            "Dimensions": "1.5m radius base of the well, and 3 meter tall structure."
+        }
+    },
+    "Assets/Oode studios/Lowpoly nature/Prefabs/Bridges/Bridge.prefab":
+    {
+        "Name": "SimpleWoodenBridge",
+        "Info": {
+            "Local origin": "Y is 1m below the posts and 0.5m below the lowest part of the crossing. Midpoint Z, midpoint x.",
+            "Dimensions": "6 m long in the Z dimension over the crossing. The walkway is 2m wide. The railings are 1 meter off the surface of the bridge.",
+            "Description": "A low poly bridge. The posts on either side are the starts and ends of the crossing. Very small cracks in teh bridge."
+        }
+    },
+    "Assets/POLYGON city pack/Prefabs/Buildings/Building_A_slender_prefab.prefab":
+    {
+        "Name": "SlenderGrayBuilding36m",
+        "Info": {
+            "Local origin": "5m from building's -X side, and right at the objects +Z side",
+            "Dimensions": "18 across the x axis, 12m across the z axis, and 40m high",
+            "Important points": "There is a good position for a player at the roof at (0, 41, -8) from this object's origin."
+        }
+    }
+}
