@@ -6,3 +6,7 @@ This is a eye-tracking package that I can't see to find online anywhere. Go to I
 
 ### Skyboxes
 The skyboxes are too big of files to store on Github, so get them through the Unity Store (AllSkyFree)
+
+### Blue Polygon Bridge
+This is one of the better bridges, but the materials of the prefab don't import well. Edit the prefab and slot in the materials.
+
