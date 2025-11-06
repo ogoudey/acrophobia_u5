@@ -1,0 +1,22 @@
+# Ignore everything in these asset folders
+Assets/Blue Polygon/**/*.meta
+Assets/CastlePack/**/*.meta
+Assets/Ground Materials/**/*.meta
+Assets/MaximeBrunoni/**/*.meta
+Assets/Oode studios/**/*.meta
+Assets/POLYGON city pack/**/*.meta
+Assets/Proxy Games/**/*.meta
+Assets/Skybox Materials/**/*.meta
+Assets/Sounds/**/*.meta
+
+# But keep .gitkeep files in them
+!Assets/Blue Polygon/.gitkeep
+!Assets/CastlePack/.gitkeep
+!Assets/Ground Materials/.gitkeep
+!Assets/MaximeBrunoni/.gitkeep
+!Assets/Oode studios/.gitkeep
+!Assets/POLYGON city pack/.gitkeep
+!Assets/Proxy Games/.gitkeep
+!Assets/Skybox Materials/.gitkeep
+!Assets/Sounds/.gitkeep
+
