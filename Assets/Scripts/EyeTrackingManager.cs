@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using UnityEngine.UI;
 using System.Diagnostics;
 using PCPSLib;
+using System.Net.Http.Headers;
 
 namespace ViveSR.anipal.Eye
 {
@@ -48,7 +49,7 @@ namespace ViveSR.anipal.Eye
         private static List<float> fearLuminance;
         private static List<float> fearIncrements;
         private static bool fearChecked = false;
-        private static bool fearEnabled = false;
+        private static bool fearEnabled = true; //??
         private static bool fearConfigured = false;
 
         private static PCPS pcps;
@@ -89,10 +90,30 @@ namespace ViveSR.anipal.Eye
                 UnityEngine.Debug.LogWarning("No GameObject with a Camera component was found in the scene.");
                 return;
             }
-                        
             pcps = new PCPS();
-            cam = Camera.main;
+
             string sceneName = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name;
+            if (sceneName != "Calibration")
+            {
+                List<float> increments = LoadIncrementsForSubject(subjectName);
+                if (increments.Count > 0)
+                {
+                    pcps.SetIncrements(increments.ToArray());
+                    fearConfigured = true;
+                    UnityEngine.Debug.LogWarning($"No increments loaded for {subjectName}");
+                }
+                else
+                {
+                    UnityEngine.Debug.LogWarning($"No increments loaded for {subjectName}");
+                }
+                    
+            }
+
+            
+            // Otherwise this is likely the calibrationscene
+
+            cam = Camera.main;
+            
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss");  // e.g., 2025-10-22_14-30-00
             string logDirectory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
@@ -251,12 +272,13 @@ namespace ViveSR.anipal.Eye
             calibrationScreen.SetActive(true);
             for (int i = 0; i < 18; i++)
             {
-                UnityEngine.Debug.Log($"Doing something{i}");
+                
                 colorVal = i * 15;
                 colorByte = (byte)colorVal;
                 rawImage.color = new Color32(colorByte, colorByte, colorByte, 255);
                 //UnityMainThreadDispatcher.Instance().Enqueue(() => PupilCalibrationLog(string.Format("pupil_calibration_{0}", colorVal), luminanceDelay));
                 yield return new WaitForSecondsRealtime(luminanceDelay);
+                UnityEngine.Debug.Log($"Light level: {colorVal}, diameter: {pupilDiameterLeft}.");
                 Increment(pupilDiameterLeft, pupilDiameterRight);
                 luminanceDelay = 2.0f;
             }
@@ -269,7 +291,7 @@ namespace ViveSR.anipal.Eye
         private static float Analysis(int timeStamp, float pupilDiameterLeft, float pupilDiameterRight, float luminance)
         {
             int fear;
-            float fear_answer = 0.0F;
+            float fear_answer = 4.20F;
             if (fearChecked && fearEnabled && fearConfigured)
             {
                 if (fearStart == -1)
@@ -287,6 +309,10 @@ namespace ViveSR.anipal.Eye
 
                 }
             }
+            else
+            {
+                //UnityEngine.Debug.Log("Analysis no work - fear not checked, enabled, or configured");
+            }
             return fear_answer;
         }
 
@@ -296,19 +322,89 @@ namespace ViveSR.anipal.Eye
             {
                 fearIncrements.Add(pupilDiameterLeft);
             }
+            else
+            {
+                UnityEngine.Debug.Log("Not adding increments properly...");
+            }
 
         }
 
         public void UpdateIncrements()
         {
-            //Increments inc = new Increments(fearIncrements);
-            pcps.SetThreshold(2.0f); // Why not?
-            pcps.SetIncrements(fearIncrements.ToArray());
+            UnityEngine.Debug.Log("Updateing Increments");
+            string incrementsDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                "AcroGenData",
+                subjectName
+            );
+            Directory.CreateDirectory(incrementsDirectory);
+            string incPath = Path.Combine(incrementsDirectory, "increments.csv");
 
-            fearConfigured = true;
+            StreamWriter incWriter = new StreamWriter(incPath);
+            incWriter.WriteLine(string.Join(",", fearIncrements));
+            incWriter.Flush();
+            incWriter.Close();
             UnityEngine.Debug.Log("?? Fear increments configured");
 
         }
+        
+        public List<float> LoadIncrementsForSubject(string subject)
+        {
+            // Construct paths
+            string incrementsDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
+                "AcroGenData",
+                subject
+            );
+            string incPath = Path.Combine(incrementsDirectory, "increments.csv");
+
+            // Check if file exists
+            if (!File.Exists(incPath))
+            {
+                UnityEngine.Debug.LogError($"Increment file not found for subject '{subject}' at: {incPath}");
+                return new List<float>(); // Return empty list instead of throwing
+            }
+
+            try
+            {
+                using (StreamReader streamReader = new StreamReader(incPath))
+                {
+                    string increments = streamReader.ReadLine();
+
+                    // Check if the file or first line is empty
+                    if (string.IsNullOrWhiteSpace(increments))
+                    {
+                        UnityEngine.Debug.LogWarning($"No data found in increments file for subject '{subject}'.");
+                        return new List<float>();
+                    }
+
+                    string[] strIncrements = increments.Split(',');
+                    List<float> fearincrements = new List<float>();
+
+                    foreach (string str in strIncrements)
+                    {
+                        if (float.TryParse(str, out float value))
+                        {
+                            fearincrements.Add(value);
+                        }
+                        else
+                        {
+                            UnityEngine.Debug.LogWarning($"Invalid increment value '{str}' in file for subject '{subject}'. Skipping...");
+                        }
+                    }
+
+                    UnityEngine.Debug.Log($"Loaded {fearincrements.Count} increments for {subject}");
+                    return fearincrements;
+                }
+            }
+            catch (Exception ex)
+            {
+                UnityEngine.Debug.LogError($"Error reading increments for subject '{subject}': {ex.Message}");
+                return new List<float>();
+            }
+        }
+
+
 
         public static float CalculateFear()
         {

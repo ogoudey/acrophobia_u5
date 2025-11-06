@@ -825,9 +825,9 @@ public class GenerationWindow : EditorWindow
     }
 }
 
- // Ctrl/Cmd + Shift + G
+// Ctrl/Cmd + Shift + G
 public class RunExperimentWindow : EditorWindow
-{ 
+{
     [MenuItem("Gen Menu/Experiment/Customized Scenes")]
     public static void Show()
     {
@@ -906,7 +906,7 @@ public class RunExperimentWindow : EditorWindow
                     {
                         UnityEngine.Debug.LogWarning("No GameObject with a Camera component was found in the scene.");
                     }
-    
+
                     this.Close();
                 }
             }
@@ -929,8 +929,59 @@ public class RunExperimentWindow : EditorWindow
         UnityEngine.Debug.Log("Opened practice scene: " + scenePath);
     }
 
+    private List<string> GetAllSubjects(Dictionary<string, Dictionary<string, string>> generations)
+    {
+        List<string> subjects = new List<string>();
+
+        foreach (var kvp in generations)
+        {
+            var data = kvp.Value;
+            if (data.ContainsKey("Subject"))
+            {
+                subjects.Add(data["Subject"]);
+            }
+        }
+
+        return subjects;
+    }
+}
+
+public class CalibrationWindow : EditorWindow
+{ 
     [MenuItem("Gen Menu/Experiment/Calibration/Load Scene")]
-    public static void OpenPupilCalibration()
+    public static void Show()
+    {
+        CalibrationWindow window = CreateInstance<CalibrationWindow>();
+        window.titleContent = new GUIContent("Choose Subject");
+        window.minSize = new Vector2(350, 180);
+        window.ShowUtility();
+    }
+
+    private void OnGUI()
+    {
+        Dictionary<string, Dictionary<string, string>> generations = GenerationsLoader.LoadGenerations();
+        List<string> targetSubjects = GetAllSubjects(generations);
+        GUILayout.Label("Calibrate", EditorStyles.boldLabel);
+        if (targetSubjects == null || targetSubjects.Count == 0)
+        {
+            EditorGUILayout.HelpBox($"No subjects available, contact your supervisor.", MessageType.Warning);
+            return;
+        }
+        int selectedIndex = 0;
+        selectedIndex = EditorGUILayout.Popup("Select Subject", selectedIndex, targetSubjects.ToArray());
+
+
+        if (GUILayout.Button($"Open Calibration Scene", GUILayout.Width(150)))
+        {
+            string selectedSubject = targetSubjects[selectedIndex];
+            UnityEngine.Debug.Log($"Calibrating on {selectedSubject}...");
+            OpenPupilCalibration(selectedSubject);
+            Close();
+        }
+
+    }
+        
+    public static void OpenPupilCalibration(string selectedSubject)
     {
 
         string scenePath = "Assets/Scenes/Calibration.unity";
@@ -949,11 +1000,25 @@ public class RunExperimentWindow : EditorWindow
             EditorSceneManager.OpenScene(scenePath);
             UnityEngine.Debug.Log("Opened calibration scene: " + scenePath);
         }
+        Camera cameraComponent = UnityEngine.Object.FindObjectOfType<Camera>();
+
+        if (cameraComponent != null)
+        {
+            GameObject cameraObject = cameraComponent.gameObject;
+
+            cameraObject.name = selectedSubject;
+            UnityEngine.Debug.Log($"Renamed GameObject with Camera component to '{selectedSubject}' for calibration.");
+        }
+        else
+        {
+            UnityEngine.Debug.LogWarning("No GameObject with a Camera component was found in the scene.");
+        }
+                    
     }
 
     [MenuItem("Gen Menu/Experiment/Calibration/Run Calibration")]
     public static void RunPupilCalibration()
-    {
+    {       
         // This line you change for another Eyetracking package.
         ViveSR.anipal.Eye.EyeTrackingManager eyeManager = FindObjectOfType<ViveSR.anipal.Eye.EyeTrackingManager>();
         if (eyeManager == null)
