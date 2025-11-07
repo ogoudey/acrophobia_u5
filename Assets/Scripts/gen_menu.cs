@@ -60,6 +60,8 @@ public class GenerationWindow : EditorWindow
     private string subjectName = "";
     private string[] subjects = { "Default Dave" };
 
+    private Vector2 scrollPosDoneLogs;
+    private Vector2 scrollPosLogs;
 
     [MenuItem("Gen Menu/Generation Window %#g")] // Ctrl/Cmd + Shift + G
     private static void OpenWindow()
@@ -176,6 +178,7 @@ public class GenerationWindow : EditorWindow
         }
         else
         {
+            scrollPosLogs = EditorGUILayout.BeginScrollView(scrollPosLogs, GUILayout.ExpandHeight(true));
             foreach (string logPath in logFiles)
             {
                 string sceneName = Path.GetFileNameWithoutExtension(logPath);
@@ -202,6 +205,7 @@ public class GenerationWindow : EditorWindow
 
                 EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
             }
+            EditorGUILayout.EndScrollView(); // End scroll view
         }
 
         EditorGUILayout.Space();
@@ -224,7 +228,7 @@ public class GenerationWindow : EditorWindow
             EditorGUILayout.LabelField("No past logs found.");
             return;
         }
-
+        scrollPosDoneLogs = EditorGUILayout.BeginScrollView(scrollPosDoneLogs, GUILayout.ExpandHeight(true));
         foreach (string logPath in doneLogFiles)
         {
             string sceneName = Path.GetFileNameWithoutExtension(logPath);
@@ -247,6 +251,7 @@ public class GenerationWindow : EditorWindow
 
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
         }
+        EditorGUILayout.EndScrollView(); // End scroll view
 
         GUILayout.Space(10);
         GUILayout.Label("", GUI.skin.horizontalSlider);
