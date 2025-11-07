@@ -19,7 +19,7 @@ public class GenerationWindow : EditorWindow
     private string userPrompt = "";
     private bool premadePromptToggle = false;
     private string[] premadePrompts = {
-        "Select...",// Default choice
+        "Select...",
         "Generate a world that triggers acrophobia while crossing a bridge",
         "Generate a world where I'm on a skyscraper."
     };
@@ -33,7 +33,7 @@ public class GenerationWindow : EditorWindow
     private bool use_asset_project_generator_class = true;
     private bool runSync = false;
     private Dictionary<string, bool> expandedLogs = new Dictionary<string, bool>();
-
+    private Dictionary<string, Vector2> logScrolls = new Dictionary<string, Vector2>();
     private Dictionary<string, string> subjects2Generations = new Dictionary<string, string>();
 
     // Generations tab
@@ -77,7 +77,6 @@ public class GenerationWindow : EditorWindow
     private void OnGUI()
     {
         EditorGUILayout.BeginHorizontal();
-
         // Sidebar
         EditorGUILayout.BeginVertical(GUILayout.Width(120));
         selectedTab = GUILayout.SelectionGrid(selectedTab, tabs, 1);
@@ -234,6 +233,8 @@ public class GenerationWindow : EditorWindow
             string sceneName = Path.GetFileNameWithoutExtension(logPath);
             if (!expandedLogs.ContainsKey(sceneName))
                 expandedLogs[sceneName] = false;
+            if (!logScrolls.ContainsKey(sceneName))
+                logScrolls[sceneName] = Vector2.zero;
 
             GUILayout.Space(4);
             GUILayout.BeginHorizontal();
@@ -246,7 +247,9 @@ public class GenerationWindow : EditorWindow
             if (expandedLogs[sceneName])
             {
                 string fullLog = ReadWholeFileSafe(logPath);
+                logScrolls[sceneName] = EditorGUILayout.BeginScrollView(logScrolls[sceneName], GUILayout.Height(200));
                 EditorGUILayout.TextArea(fullLog, GUILayout.Height(200));
+                EditorGUILayout.EndScrollView();
             }
 
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
@@ -645,11 +648,13 @@ public class GenerationWindow : EditorWindow
                 return;
             }
 
+            UnityEngine.Debug.Log(promptText);
             UnityEngine.Debug.Log($"Running powershell with args \"{assetProject}\" \"{promptText}\" \"{generationName}\" \"{use_asset_project_generator_class}\"");
-
+            
             string psArgs = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" " +
                     $"\"{assetProject}\" \"{promptText}\" \"{generationName}\" \"{use_asset_project_generator_class}\"";
-            
+
+            UnityEngine.Debug.Log(psArgs);
             
             psi = new ProcessStartInfo()
             {
