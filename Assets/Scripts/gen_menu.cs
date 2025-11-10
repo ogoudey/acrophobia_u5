@@ -47,6 +47,10 @@ public class GenerationWindow : EditorWindow
 
     private string reassignTarget = "";
     private string reassignGeneration = null;
+
+    private string renameTarget = "";
+    private string renameGeneration = null;
+
     private string infoGeneration = null;
 
     public static readonly string assetProjectDir = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
@@ -177,6 +181,7 @@ public class GenerationWindow : EditorWindow
         }
         else
         {
+            Array.Reverse(logFiles);
             scrollPosLogs = EditorGUILayout.BeginScrollView(scrollPosLogs, GUILayout.ExpandHeight(true));
             foreach (string logPath in logFiles)
             {
@@ -278,10 +283,12 @@ public class GenerationWindow : EditorWindow
         EditorGUILayout.BeginHorizontal(EditorStyles.toolbar);
         GUILayout.Label("Generation Name", GUILayout.Width(150));
         GUILayout.Label("Subject Name", GUILayout.Width(150));
-        GUILayout.Label("Reassign?", GUILayout.Width(80));
+        GUILayout.Label("Rename...", GUILayout.Width(80));
+        GUILayout.Label("Reassign...", GUILayout.Width(80));
         GUILayout.Label("More Info", GUILayout.Width(80));
         GUILayout.Label("Test", GUILayout.Width(60));
         GUILayout.Label("Approve", GUILayout.Width(80));
+        GUILayout.Label("Copy?", GUILayout.Width(60));
         GUILayout.Label("Delete", GUILayout.Width(60));
         EditorGUILayout.EndHorizontal();
 
@@ -315,7 +322,10 @@ public class GenerationWindow : EditorWindow
             string subject = data.ContainsKey("Subject") ? data["Subject"] : "(none)";
             GUILayout.Label(subject, GUILayout.Width(150));
 
-
+            if (GUILayout.Button("Rename", GUILayout.Width(80)))
+            {
+                renameGeneration = genName;
+            }
 
             // Reassign button
             if (GUILayout.Button("Reassign", GUILayout.Width(80)))
@@ -363,6 +373,22 @@ public class GenerationWindow : EditorWindow
             if (GUILayout.Button("Approve", GUILayout.Width(80)))
             {
                 data["Approved"] = "true";
+            }
+
+            // Copy button
+            if (GUILayout.Button("Copy", GUILayout.Width(60)))
+            {
+                string copyGenName = genName + "_Copy";
+                generations[copyGenName] = generations[genName];
+                string generationsRoot = Path.Combine(Application.dataPath, "Generations");
+
+                string srcFullPath = Path.Combine(generationsRoot, genName + ".unity");
+                string cpyfullPath = Path.Combine(generationsRoot, copyGenName + ".unity");
+
+                File.Copy(srcFullPath, cpyfullPath);
+                AssetDatabase.Refresh();
+                UnityEngine.Debug.Log($"✅ Scene copied to '{cpyfullPath}'");
+
             }
 
             // Delete button
@@ -426,7 +452,39 @@ public class GenerationWindow : EditorWindow
                     reassignGeneration = null;
                     reassignTarget = "";
                 }
-                UnityEngine.Debug.Log("End");
+                EditorGUILayout.EndHorizontal();
+
+                EditorGUILayout.EndVertical();
+                EditorGUI.indentLevel--;
+            }
+
+            if (renameGeneration == genName)
+            {
+                EditorGUI.indentLevel++;
+                EditorGUILayout.BeginVertical("box");
+                EditorGUILayout.LabelField($"Rename {genName}:");
+                renameTarget = EditorGUILayout.TextField("New Name", renameTarget);
+
+                EditorGUILayout.BeginHorizontal();
+                if (GUILayout.Button("Confirm", GUILayout.Width(100)))
+                {
+                    generations[renameTarget] = generations[genName];
+
+                    string generationsRoot = Path.Combine(Application.dataPath, "Generations");
+                    string cpyfullPath = Path.Combine(generationsRoot, renameTarget + ".unity");
+                    string srcFullPath = Path.Combine(generationsRoot, genName + ".unity");
+                    File.Copy(srcFullPath, cpyfullPath);
+                    File.Delete(srcFullPath);
+
+                    renameGeneration = null;
+                    renameTarget = "";
+                    generations.Remove(genName);
+                }
+                if (GUILayout.Button("Cancel", GUILayout.Width(80)))
+                {
+                    renameGeneration = null;
+                    renameTarget = "";
+                }
                 EditorGUILayout.EndHorizontal();
 
                 EditorGUILayout.EndVertical();
@@ -956,8 +1014,9 @@ public class RunExperimentWindow : EditorWindow
     }
 }
 
+
 public class CalibrationWindow : EditorWindow
-{ 
+{
     [MenuItem("Gen Menu/Experiment/Calibration/Load Scene")]
     public static void Show()
     {
@@ -990,7 +1049,7 @@ public class CalibrationWindow : EditorWindow
         }
 
     }
-        
+
     public static void OpenPupilCalibration(string selectedSubject)
     {
 
@@ -1023,20 +1082,23 @@ public class CalibrationWindow : EditorWindow
         {
             UnityEngine.Debug.LogWarning("No GameObject with a Camera component was found in the scene.");
         }
-                    
+
     }
 
     [MenuItem("Gen Menu/Experiment/Calibration/Run Calibration")]
     public static void RunPupilCalibration()
-    {       
+    {
         // This line you change for another Eyetracking package.
+        /*
         ViveSR.anipal.Eye.EyeTrackingManager eyeManager = FindObjectOfType<ViveSR.anipal.Eye.EyeTrackingManager>();
+        
         if (eyeManager == null)
             UnityEngine.Debug.Log("Can't fine EyeManager...");
         else
         {
             eyeManager.PupilCalibration();
-        }
+        }*/
+        UnityEngine.Debug.Log("Would run pupil calibration");
     }
 
     // Another function copied from GenWindow
