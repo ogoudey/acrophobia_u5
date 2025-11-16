@@ -43,8 +43,6 @@ public class GenerationWindow : EditorWindow
     private string[] generationOptions;
     private int selectedGenerationIndex = 0;
     private string[] generationFiles;
-    private bool useSameSubject = false;
-
     private string reassignTarget = "";
     private string reassignGeneration = null;
 
@@ -60,9 +58,6 @@ public class GenerationWindow : EditorWindow
     private string rootPath = "../..";  // ".." means one folder above Assets (the project root)
     private string[] folderOptions;
     private int selectedFolderIndex = -1;
-
-    private string subjectName = "";
-    private string[] subjects = { "Default Dave" };
 
     private Vector2 scrollPosDoneLogs;
     private Vector2 scrollPosLogs;
@@ -181,7 +176,6 @@ public class GenerationWindow : EditorWindow
         }
         else
         {
-            Array.Reverse(logFiles);
             scrollPosLogs = EditorGUILayout.BeginScrollView(scrollPosLogs, GUILayout.ExpandHeight(true));
             foreach (string logPath in logFiles)
             {
@@ -379,7 +373,7 @@ public class GenerationWindow : EditorWindow
             if (GUILayout.Button("Copy", GUILayout.Width(60)))
             {
                 string copyGenName = genName + "_Copy";
-                generations[copyGenName] = generations[genName];
+                generations[copyGenName] = new Dictionary<string, string>(generations[genName]);
                 string generationsRoot = Path.Combine(Application.dataPath, "Generations");
 
                 string srcFullPath = Path.Combine(generationsRoot, genName + ".unity");
@@ -388,7 +382,7 @@ public class GenerationWindow : EditorWindow
                 File.Copy(srcFullPath, cpyfullPath);
                 AssetDatabase.Refresh();
                 UnityEngine.Debug.Log($"✅ Scene copied to '{cpyfullPath}'");
-
+                SaveGenerations();
             }
 
             // Delete button
@@ -541,7 +535,6 @@ public class GenerationWindow : EditorWindow
         }
     }
 
-
     private void DrawSettingsTab()
     {
         EditorGUILayout.LabelField("Settings", EditorStyles.boldLabel);
@@ -691,7 +684,6 @@ public class GenerationWindow : EditorWindow
         selectedGenerationIndex = 0;
     }
     
-
     private void Generate()
     {
         ProcessStartInfo psi;
@@ -835,7 +827,16 @@ public class GenerationWindow : EditorWindow
             using (var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             using (var reader = new StreamReader(fs))
             {
-                return reader.ReadToEnd();
+                var lines = new List<string>();
+                while (!reader.EndOfStream)
+                    lines.Add(reader.ReadLine());
+
+                // Reverse line order
+                lines.Reverse();
+
+                // Join back together
+                return string.Join("\n", lines);
+            
             }
         }
         catch (System.Exception e)
